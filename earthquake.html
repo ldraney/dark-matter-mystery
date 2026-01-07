@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Earthquake Globe</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      overflow: hidden;
+    }
+    #container { display: flex; height: 100vh; }
+    #globe-view { flex: 1; position: relative; }
+
+    /* === STATS OVERLAY === */
+    .stats-overlay {
+      position: absolute;
+      top: 30px;
+      left: 30px;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 20px 30px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .stats-title {
+      font-size: 1.4em;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #66ddff;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 30px;
+      margin: 8px 0;
+      font-size: 1.1em;
+    }
+    .stat-label { color: #aaa; }
+    .stat-value { color: #fff; font-weight: bold; }
+    .stat-value.major { color: #ff6644; }
+    .live-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: #44ff44;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* === LEGEND === */
+    .legend {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 20px 25px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .legend-title {
+      font-size: 1.1em;
+      margin-bottom: 12px;
+      color: #ffaa44;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0;
+      font-size: 1em;
+    }
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+    }
+
+    /* === TIME FILTER === */
+    .time-filter {
+      position: absolute;
+      top: 30px;
+      right: 550px;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 15px 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .time-filter label {
+      color: #aaa;
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .time-filter select {
+      display: block;
+      margin-top: 8px;
+      padding: 10px 15px;
+      font-size: 1.1em;
+      background: #222;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* === INFO PANEL === */
+    #info-panel {
+      width: 520px;
+      padding: 40px 45px;
+      background: linear-gradient(180deg, rgba(10, 10, 25, 0.99) 0%, rgba(20, 15, 35, 0.99) 100%);
+      overflow-y: auto;
+      border-left: 3px solid #445;
+    }
+
+    h1 {
+      font-size: 2.2em;
+      margin-bottom: 25px;
+      color: #66ddff;
+      text-shadow: 0 0 30px rgba(100, 200, 255, 0.4);
+      line-height: 1.2;
+    }
+
+    h2 {
+      font-size: 1.5em;
+      margin: 40px 0 18px;
+      color: #ffcc55;
+      border-bottom: 2px solid rgba(255, 200, 85, 0.3);
+      padding-bottom: 10px;
+    }
+
+    p {
+      line-height: 1.85;
+      margin-bottom: 18px;
+      font-size: 1.2em;
+      color: #e8e8e8;
+    }
+
+    .lead {
+      font-size: 1.3em;
+      color: #fff;
+    }
+
+    .highlight {
+      color: #ff8866;
+      font-weight: bold;
+    }
+
+    /* === CALLOUT BOXES === */
+    .info-box {
+      background: rgba(100, 200, 255, 0.12);
+      border-left: 5px solid #66ddff;
+      padding: 22px 28px;
+      margin: 25px 0;
+      border-radius: 0 12px 12px 0;
+      font-size: 1.15em;
+      line-height: 1.8;
+    }
+    .info-box strong {
+      color: #88eeff;
+      display: block;
+      margin-bottom: 10px;
+      font-size: 1.15em;
+    }
+
+    .warning-box {
+      background: rgba(255, 100, 100, 0.12);
+      border-left: 5px solid #ff6644;
+      padding: 22px 28px;
+      margin: 25px 0;
+      border-radius: 0 12px 12px 0;
+      font-size: 1.15em;
+      line-height: 1.8;
+    }
+    .warning-box strong {
+      color: #ff8866;
+      display: block;
+      margin-bottom: 10px;
+      font-size: 1.15em;
+    }
+
+    /* === RECENT QUAKES LIST === */
+    .quake-list {
+      margin: 20px 0;
+    }
+    .quake-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      font-size: 1.1em;
+    }
+    .quake-item:last-child { border-bottom: none; }
+    .quake-mag {
+      min-width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+    .quake-mag.minor { background: #44aa44; }
+    .quake-mag.moderate { background: #ddaa00; color: #000; }
+    .quake-mag.major { background: #ff6644; }
+    .quake-mag.great { background: #ff2222; }
+    .quake-info { flex: 1; }
+    .quake-location { color: #fff; margin-bottom: 4px; }
+    .quake-time { color: #888; font-size: 0.9em; }
+
+    /* === SOURCES === */
+    .source {
+      font-size: 1em;
+      color: #888;
+      margin-top: 40px;
+      padding-top: 25px;
+      border-top: 1px solid #444;
+    }
+    .source a {
+      color: #88bbff;
+      text-decoration: none;
+      display: block;
+      margin-top: 8px;
+    }
+    .source a:hover { text-decoration: underline; }
+
+    /* Scrollbar */
+    #info-panel::-webkit-scrollbar { width: 8px; }
+    #info-panel::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+    #info-panel::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+  </style>
+  <script type="module" crossorigin src="/dark-matter-mystery/assets/earthquake-X2w_u3AF.js"></script>
+  <link rel="modulepreload" crossorigin href="/dark-matter-mystery/assets/OrbitControls-wnF1M9xv.js">
+</head>
+<body>
+  <div id="container">
+    <div id="globe-view">
+      <div class="stats-overlay">
+        <div class="stats-title"><span class="live-dot"></span>Live Earthquake Data</div>
+        <div class="stat-row">
+          <span class="stat-label">Total earthquakes:</span>
+          <span class="stat-value" id="totalCount">Loading...</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Magnitude 4.5+:</span>
+          <span class="stat-value major" id="majorCount">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Largest today:</span>
+          <span class="stat-value" id="largestMag">-</span>
+        </div>
+      </div>
+
+      <div class="time-filter">
+        <label>Time Range</label>
+        <select id="timeRange" onchange="changeTimeRange()">
+          <option value="hour">Past Hour</option>
+          <option value="day" selected>Past 24 Hours</option>
+          <option value="week">Past 7 Days</option>
+          <option value="month">Past 30 Days</option>
+        </select>
+      </div>
+
+      <div class="legend">
+        <div class="legend-title">Magnitude</div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background: #44aa44; width: 8px; height: 8px;"></div>
+          <span>0 - 2.5 (Minor)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background: #ddaa00; width: 12px; height: 12px;"></div>
+          <span>2.5 - 4.5 (Light)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background: #ff6644; width: 16px; height: 16px;"></div>
+          <span>4.5 - 6.0 (Moderate)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background: #ff2222; width: 22px; height: 22px;"></div>
+          <span>6.0+ (Major)</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="info-panel">
+      <h1>Live Earthquake Globe</h1>
+
+      <p class="lead">Real-time earthquake data from the U.S. Geological Survey, updated every minute.</p>
+
+      <div class="info-box">
+        <strong>This is real data.</strong>
+        Every dot on this globe represents an actual earthquake detected by seismometers around the world in the last 24 hours.
+      </div>
+
+      <h2>Recent Significant Quakes</h2>
+      <div class="quake-list" id="quakeList">
+        <div class="quake-item">
+          <div class="quake-mag minor">...</div>
+          <div class="quake-info">
+            <div class="quake-location">Loading earthquake data...</div>
+            <div class="quake-time">Please wait</div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Why Earthquakes Happen</h2>
+      <p>Earth's outer shell is broken into massive plates that slowly drift on the mantle below. Where plates meet, they:</p>
+      <p><span class="highlight">Collide</span> (Himalayas forming), <span class="highlight">Separate</span> (Mid-Atlantic Ridge), or <span class="highlight">Slide past</span> (San Andreas Fault).</p>
+      <p>The stress builds until rocks suddenly slip — releasing energy as seismic waves we feel as earthquakes.</p>
+
+      <div class="warning-box">
+        <strong>We cannot predict earthquakes.</strong>
+        Despite decades of research, no reliable method exists to predict when and where the next earthquake will strike. We can only identify high-risk zones.
+      </div>
+
+      <h2>The Ring of Fire</h2>
+      <p>Notice how earthquakes cluster around the Pacific Ocean? This "Ring of Fire" marks where the Pacific Plate meets other plates. About 90% of the world's earthquakes occur here.</p>
+
+      <h2>Magnitude Scale</h2>
+      <p>Each whole number increase represents <span class="highlight">10x more ground motion</span> and about <span class="highlight">32x more energy</span>.</p>
+      <p>A magnitude 6.0 releases as much energy as 15,000 tons of TNT. A 7.0 releases 32 times more than that.</p>
+
+      <div class="source">
+        <strong>Data Source:</strong>
+        <a href="https://earthquake.usgs.gov/fdsnws/event/1/" target="_blank">USGS Earthquake Hazards Program API</a>
+        <a href="https://earthquake.usgs.gov/earthquakes/map/" target="_blank">USGS Real-time Earthquake Map</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
