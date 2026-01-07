@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solar System Explorer</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+    #info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: white;
+      font-family: Arial, sans-serif;
+      font-size: 24px;
+      text-shadow: 2px 2px 4px black;
+    }
+    #back-link {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: white;
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      text-decoration: none;
+      background: rgba(0,0,0,0.5);
+      padding: 10px 20px;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+    #back-link:hover {
+      background: rgba(100,100,100,0.5);
+    }
+  </style>
+  <script type="module" crossorigin src="/dark-matter-mystery/assets/solar-BkAig4lC.js"></script>
+  <link rel="modulepreload" crossorigin href="/dark-matter-mystery/assets/OrbitControls-wnF1M9xv.js">
+</head>
+<body>
+  <div id="info">Click and drag to explore space!</div>
+  <a href="index.html" id="back-link">&larr; Back to Home</a>
+</body>
+</html>
