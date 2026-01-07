@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Dark Matter Mystery</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      overflow: hidden;
+    }
+    #container { display: flex; height: 100vh; }
+    #galaxy-view { flex: 1; position: relative; }
+
+    /* === GALAXY OVERLAY CONTROLS === */
+    .galaxy-controls {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 25px 40px;
+      border-radius: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+    }
+    .control-label {
+      font-size: 0.9em;
+      color: #aaa;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .galaxy-controls #toggleBtn {
+      padding: 18px 50px;
+      font-size: 1.4em;
+      background: linear-gradient(135deg, #ff5555 0%, #cc2222 100%);
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 6px 30px rgba(255, 68, 68, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .galaxy-controls #toggleBtn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 10px 40px rgba(255, 68, 68, 0.7);
+    }
+    .galaxy-controls #toggleBtn.expected {
+      background: linear-gradient(135deg, #55dd55 0%, #228822 100%);
+      box-shadow: 0 6px 30px rgba(68, 221, 68, 0.5);
+    }
+    .galaxy-controls #toggleBtn.expected:hover {
+      box-shadow: 0 10px 40px rgba(68, 221, 68, 0.7);
+    }
+    .galaxy-controls .button-hint {
+      margin-top: 15px;
+      font-size: 1em;
+      color: #999;
+      line-height: 1.6;
+    }
+
+    /* === MODE INDICATOR === */
+    .mode-indicator {
+      position: absolute;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 14px 28px;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 1.2em;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .mode-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    .mode-dot.observed {
+      background: #ff4444;
+      box-shadow: 0 0 15px #ff4444;
+    }
+    .mode-dot.expected {
+      background: #44ff44;
+      box-shadow: 0 0 15px #44ff44;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* === SIDE PANEL - SUPER READABLE === */
+    #info-panel {
+      width: 520px;
+      padding: 40px 45px;
+      background: linear-gradient(180deg, rgba(10, 10, 25, 0.99) 0%, rgba(20, 15, 35, 0.99) 100%);
+      overflow-y: auto;
+      border-left: 3px solid #445;
+    }
+
+    h1 {
+      font-size: 2.4em;
+      margin-bottom: 25px;
+      color: #aaccff;
+      text-shadow: 0 0 30px rgba(100, 150, 255, 0.4);
+      line-height: 1.2;
+    }
+
+    h2 {
+      font-size: 1.6em;
+      margin: 45px 0 20px;
+      color: #ffcc55;
+      border-bottom: 2px solid rgba(255, 200, 85, 0.3);
+      padding-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    p {
+      line-height: 1.9;
+      margin-bottom: 20px;
+      font-size: 1.25em;
+      color: #e8e8e8;
+    }
+
+    .lead {
+      font-size: 1.35em;
+      color: #fff;
+      line-height: 1.8;
+    }
+
+    .highlight {
+      color: #ff8888;
+      font-weight: bold;
+      font-size: 1.1em;
+      text-shadow: 0 0 10px rgba(255, 100, 100, 0.3);
+    }
+
+    /* === CALLOUT BOXES === */
+    .mystery {
+      background: rgba(255, 80, 80, 0.15);
+      border-left: 5px solid #ff6666;
+      padding: 22px 28px;
+      margin: 25px 0;
+      border-radius: 0 12px 12px 0;
+      font-size: 1.2em;
+      line-height: 1.8;
+    }
+    .mystery strong {
+      font-size: 1.2em;
+      color: #ff9999;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .center-info {
+      background: rgba(255, 170, 68, 0.15);
+      border-left: 5px solid #ffaa44;
+      padding: 22px 28px;
+      margin: 25px 0;
+      border-radius: 0 12px 12px 0;
+      font-size: 1.2em;
+      line-height: 1.8;
+    }
+    .center-info strong {
+      font-size: 1.15em;
+      color: #ffdd77;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    /* === ROTATION CURVE CHART === */
+    #chart {
+      width: 100%;
+      height: 200px;
+      margin: 20px 0;
+      background: rgba(0,0,0,0.5);
+      border-radius: 12px;
+      border: 1px solid #444;
+    }
+
+    .legend {
+      display: flex;
+      gap: 30px;
+      font-size: 1.15em;
+      margin: 20px 0;
+      justify-content: center;
+    }
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .legend .dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    /* === OPTIONS LIST === */
+    .options {
+      margin: 20px 0;
+    }
+    .option {
+      display: flex;
+      gap: 15px;
+      padding: 18px 0;
+      font-size: 1.25em;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      line-height: 1.6;
+    }
+    .option:last-child {
+      border-bottom: none;
+    }
+    .option-num {
+      color: #ffbb55;
+      font-weight: bold;
+      font-size: 1.3em;
+      min-width: 30px;
+    }
+
+    /* === SOURCES === */
+    .source {
+      font-size: 1.05em;
+      color: #888;
+      margin-top: 40px;
+      padding-top: 25px;
+      border-top: 1px solid #444;
+    }
+    .source strong {
+      color: #aaa;
+      font-size: 1.1em;
+      display: block;
+      margin-bottom: 12px;
+    }
+    .source a {
+      color: #88bbff;
+      text-decoration: none;
+      display: block;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+    .source a:hover {
+      text-decoration: underline;
+      color: #aaddff;
+    }
+
+    /* Scrollbar styling */
+    #info-panel::-webkit-scrollbar {
+      width: 8px;
+    }
+    #info-panel::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.3);
+    }
+    #info-panel::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="galaxy-view">
+      <div class="galaxy-controls">
+        <div class="control-label">Interactive Comparison</div>
+        <button id="toggleBtn" onclick="toggleRotation()">Show Expected Motion</button>
+        <div class="button-hint">Click to see what the galaxy SHOULD look like.<br>Watch the outer stars slow down!</div>
+      </div>
+      <div class="mode-indicator" id="modeIndicator">
+        <div class="mode-dot observed"></div>
+        <span>Showing: OBSERVED (the mystery)</span>
+      </div>
+    </div>
+    <div id="info-panel">
+      <h1>The Dark Matter Mystery</h1>
+
+      <p class="lead">You're looking at a spiral galaxy with 20,000 stars orbiting a supermassive black hole.</p>
+
+      <h2>The Problem</h2>
+      <p>According to Newton's gravity and the visible mass, stars far from the center should orbit <span class="highlight">slowly</span>.</p>
+      <p>But when we measure real galaxies, outer stars orbit <span class="highlight">way too fast</span>.</p>
+
+      <div class="mystery">
+        <strong>This isn't a small error.</strong>
+        The outer stars move 2-3x faster than they "should." This has been confirmed in thousands of galaxies over 50 years of observations.
+      </div>
+
+      <h2>Rotation Curve</h2>
+      <canvas id="chart"></canvas>
+      <div class="legend">
+        <span><div class="dot" style="background: #44ff44; color: #44ff44;"></div> Expected</span>
+        <span><div class="dot" style="background: #ff4444; color: #ff4444;"></div> Observed</span>
+      </div>
+
+      <h2>The Galactic Center</h2>
+      <div class="center-info">
+        <strong>What's at the middle?</strong>
+        A supermassive black hole (like Sagittarius A* in our Milky Way) surrounded by 8,000 densely packed old stars. The orange glow is the accretion disk — matter spiraling in.
+      </div>
+
+      <h2>What Does This Mean?</h2>
+      <p>Three possibilities:</p>
+      <div class="options">
+        <div class="option">
+          <span class="option-num">1.</span>
+          <span>There's invisible "dark matter" holding galaxies together (~85% of all matter)</span>
+        </div>
+        <div class="option">
+          <span class="option-num">2.</span>
+          <span>Our theory of gravity is wrong at galactic scales (MOND)</span>
+        </div>
+        <div class="option">
+          <span class="option-num">3.</span>
+          <span>Something we haven't thought of yet</span>
+        </div>
+      </div>
+
+      <div class="mystery">
+        <strong>Nobody knows the answer.</strong>
+        This is one of the biggest unsolved problems in physics. Real scientists are working on this right now. You're looking at actual scientific uncertainty.
+      </div>
+
+      <h2>The Data is Rock Solid</h2>
+      <p>Vera Rubin measured this in the 1970s. It's been confirmed thousands of times since. The mystery isn't the measurement — it's the explanation.</p>
+
+      <div class="source">
+        <strong>Sources (real scientific papers):</strong>
+        <a href="https://arxiv.org/abs/astro-ph/0010594" target="_blank">Rubin & Ford (2001) — Original rotation curve data</a>
+        <a href="https://arxiv.org/abs/1609.05917" target="_blank">McGaugh et al. (2016) — Radial Acceleration Relation</a>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="galaxy.js"></script>
+</body>
+</html>
