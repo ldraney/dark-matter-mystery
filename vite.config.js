@@ -7,7 +7,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        galaxy: 'galaxy.html'
+        galaxy: 'galaxy.html',
+        earthquake: 'earthquake.html'
       }
     }
   }
