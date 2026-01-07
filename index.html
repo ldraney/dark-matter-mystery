@@ -3,23 +3,314 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Space Explorer!</title>
+  <title>Science Visualizations</title>
   <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
-    #info {
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a1a2a 100%);
+      color: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Stars background */
+    .stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .star {
       position: absolute;
-      top: 20px;
-      left: 20px;
-      color: white;
-      font-family: Arial, sans-serif;
-      font-size: 24px;
-      text-shadow: 2px 2px 4px black;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 3s infinite;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 40px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    h1 {
+      font-size: 3.5em;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #66ddff 0%, #ff88aa 50%, #ffdd66 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 0 60px rgba(100, 200, 255, 0.3);
+    }
+
+    .subtitle {
+      font-size: 1.4em;
+      color: #aaa;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .demos {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 30px;
+      margin-top: 40px;
+    }
+
+    .demo-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 0;
+      overflow: hidden;
+      transition: all 0.4s ease;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .demo-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .demo-preview {
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5em;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .demo-preview.solar {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    }
+    .demo-preview.solar::after {
+      content: '';
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      background: radial-gradient(circle, #ffdd44 0%, #ff8800 100%);
+      border-radius: 50%;
+      box-shadow: 0 0 60px #ffdd44, 0 0 100px #ff8800;
+    }
+
+    .demo-preview.galaxy {
+      background: linear-gradient(135deg, #0d0d1a 0%, #1a0a2e 100%);
+    }
+    .demo-preview.galaxy::after {
+      content: '';
+      position: absolute;
+      width: 120px;
+      height: 40px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      border-radius: 50%;
+      transform: rotate(-20deg);
+      box-shadow: 0 0 40px rgba(255, 200, 100, 0.3);
+    }
+    .demo-preview.galaxy::before {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #ffee88;
+      border-radius: 50%;
+      box-shadow: 0 0 30px #ffee88;
+    }
+
+    .demo-preview.earthquake {
+      background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%);
+    }
+    .demo-preview.earthquake::after {
+      content: '';
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, #1a4a6a 0%, #0a2a4a 50%, #1a3a5a 100%);
+      border-radius: 50%;
+      border: 2px solid rgba(100, 200, 255, 0.3);
+    }
+    .demo-preview.earthquake::before {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #ff4444;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #ff4444;
+      margin-top: -30px;
+      margin-left: 20px;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+    }
+
+    .demo-content {
+      padding: 30px;
+    }
+
+    .demo-title {
+      font-size: 1.6em;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+
+    .demo-card:nth-child(1) .demo-title { color: #ffdd66; }
+    .demo-card:nth-child(2) .demo-title { color: #ff8888; }
+    .demo-card:nth-child(3) .demo-title { color: #66ddff; }
+
+    .demo-description {
+      font-size: 1.1em;
+      color: #aaa;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .demo-tag {
+      display: inline-block;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      font-size: 0.85em;
+      color: #888;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    .demo-tag.live {
+      background: rgba(68, 255, 68, 0.15);
+      color: #66ff66;
+    }
+
+    .demo-arrow {
+      display: inline-block;
+      margin-top: 15px;
+      color: #666;
+      font-size: 1.1em;
+      transition: all 0.3s;
+    }
+
+    .demo-card:hover .demo-arrow {
+      color: #fff;
+      transform: translateX(5px);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 80px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: #666;
+      font-size: 1em;
+    }
+
+    footer a {
+      color: #88aaff;
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    .footer-links {
+      margin-top: 15px;
+    }
+    .footer-links a {
+      margin: 0 15px;
     }
   </style>
 </head>
 <body>
-  <div id="info">Click and drag to explore space!</div>
-  <script type="module" src="main.js"></script>
+  <div class="stars" id="stars"></div>
+
+  <div class="container">
+    <header>
+      <h1>Science Visualizations</h1>
+      <p class="subtitle">Interactive 3D explorations of real scientific data and unsolved mysteries. Built with Three.js.</p>
+    </header>
+
+    <div class="demos">
+      <a href="solar.html" class="demo-card">
+        <div class="demo-preview solar"></div>
+        <div class="demo-content">
+          <h2 class="demo-title">Solar System</h2>
+          <p class="demo-description">Explore our cosmic neighborhood with orbiting planets, Saturn's rings, and Earth's moon. A gentle introduction to orbital mechanics.</p>
+          <span class="demo-tag">Planets</span>
+          <span class="demo-tag">Orbits</span>
+          <span class="demo-tag">Interactive</span>
+          <div class="demo-arrow">Explore &rarr;</div>
+        </div>
+      </a>
+
+      <a href="galaxy.html" class="demo-card">
+        <div class="demo-preview galaxy"></div>
+        <div class="demo-content">
+          <h2 class="demo-title">Dark Matter Mystery</h2>
+          <p class="demo-description">20,000 stars orbiting a black hole reveal one of physics' biggest unsolved problems. Toggle between what we observe and what Newton predicts.</p>
+          <span class="demo-tag">Galaxy Rotation</span>
+          <span class="demo-tag">Dark Matter</span>
+          <span class="demo-tag">Real Physics</span>
+          <div class="demo-arrow">Investigate &rarr;</div>
+        </div>
+      </a>
+
+      <a href="earthquake.html" class="demo-card">
+        <div class="demo-preview earthquake"></div>
+        <div class="demo-content">
+          <h2 class="demo-title">Live Earthquake Globe</h2>
+          <p class="demo-description">Real-time earthquake data from USGS. Watch the Ring of Fire light up as seismometers detect tremors around the world.</p>
+          <span class="demo-tag live">Live Data</span>
+          <span class="demo-tag">USGS API</span>
+          <span class="demo-tag">Plate Tectonics</span>
+          <div class="demo-arrow">View Live &rarr;</div>
+        </div>
+      </a>
+    </div>
+
+    <footer>
+      <p>Built to spark curiosity about science.</p>
+      <div class="footer-links">
+        <a href="https://github.com/ldraney/dark-matter-mystery" target="_blank">GitHub</a>
+        <a href="https://earthquake.usgs.gov/" target="_blank">USGS</a>
+        <a href="https://arxiv.org/" target="_blank">arXiv</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Generate random stars
+    const starsContainer = document.getElementById('stars');
+    for (let i = 0; i < 150; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      star.style.left = Math.random() * 100 + '%';
+      star.style.top = Math.random() * 100 + '%';
+      star.style.width = star.style.height = (Math.random() * 2 + 1) + 'px';
+      star.style.animationDelay = Math.random() * 3 + 's';
+      starsContainer.appendChild(star);
+    }
+  </script>
 </body>
 </html>
